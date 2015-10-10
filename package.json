@@ -1,0 +1,32 @@
+{
+  "name": "gulp-append-url-version",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "HuangZhenYong",
+    "email": "116982086@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhenyong/gulp-append-url-version.git"
+  },
+  "bugs": {
+    "url": "https://github.com/geejs/gulp-tap/issues"
+  },
+  "homepage": "https://github.com/zhenyong/gulp-append-url-version.git",
+  "keywords": [
+    "gulpplugin",
+    "version",
+    "url"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "rework": "^1.0.1",
+    "rework-plugin-function": "^1.0.2",
+    "through2": "^2.0.0"
+  }
+}
