@@ -1,7 +1,7 @@
 {
   "name": "gulp-append-url-version",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.3",
+  "description": "To append url version params with md5 for background/background-image in css files.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
