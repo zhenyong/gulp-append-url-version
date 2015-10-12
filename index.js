@@ -8,6 +8,16 @@ var nodePath = require('path');
 var crypto = require('crypto');
 var fs = require('fs');
 var os = require('os');
+var extend = require('extend');
+var isImage = require('is-image');
+
+var DEBUG = true;
+
+function log() {
+  if (DEBUG) {
+    console.log.apply(console, arguments);
+  }
+}
 
 function appendUrlVersion(file, options) {
 
@@ -37,6 +47,7 @@ function appendUrlVersion(file, options) {
   var content = file.contents.toString();
   var lines = content.split(/\r?\n/);
 
+
   rework(content)
     .use(reworkFunc({
       url: function(href) {
@@ -54,7 +65,7 @@ function appendUrlVersion(file, options) {
          */
         var meta = this;
 
-        if (!checkIfNeed(meta, href)) {
+        if (!options.check(file, meta, href)) {
           return;
         }
 
@@ -64,7 +75,8 @@ function appendUrlVersion(file, options) {
 
         // console.log('>>find image url', pathname);
 
-        imgFilePath = smartRelativePath(basepath, pathname);
+        // imgFilePath = smartRelativePath(basepath, pathname);
+        imgFilePath = options.resolveUrlToFilePath(file, href);
 
         if (imgFilePath && fs.existsSync(imgFilePath)) {
           newImgUrl = makeVersionParamUrl(urlObj, imgFilePath);
@@ -79,10 +91,10 @@ function appendUrlVersion(file, options) {
           strLine = lines[startInfo.line - 1];
           lines[startInfo.line - 1] = strLine.replace(href, newImgUrl);
 
-          // console.log(newImgUrl);
+          log('complete', newImgUrl);
 
         } else {
-          // console.warn('file not exist, path:', imgFilePath);
+          log('file not exist, path:', imgFilePath);
         }
       }
     }));
@@ -90,27 +102,6 @@ function appendUrlVersion(file, options) {
 }
 
 
-
-/**
- * 
- * @param  {Object} decl css style meta object like:
- 
- *
- * @return {Bool}      if return false，will not handle this resource url ...
- */
-function checkIfNeed(cssMeta, href) {
-  var cssProp = (cssMeta.property || '').toLowerCase();
-
-  if (cssProp !== 'background' && cssProp !== 'background-image') {
-    return false;
-  }
-
-  if (!/\b\.(gif|jpg|png|jpeg)\b/i.test(href)) {
-    return false;
-  }
-
-  return true;
-}
 
 /**
  * 对url添加一个查询参数
@@ -171,34 +162,20 @@ function md5(text, subStart, subLen) {
   return typeof subStart !== undefined ? result.substr(subStart, subLen) : result;
 };
 
-/**
- * 根据资源的相对路径（以'/'开头）和一个“不完全准确”的基本路径，生成资源的绝对路径
- *
- * 例如:
- * base 是 D:\work\YQTrackV5\YQTrack.Web\res\global\css
- * sub 是 \res\www\img\help\arrow.png
- * 返回 D:\work\YQTrackV5\YQTrack.Web\res\www\img\help\arrow.png
- */
-//TODO 这部分只针对 17track,暴露配置
-function smartRelativePath(base, sub) {
-  base = nodePath.normalize(base);
-  sub = nodePath.normalize(sub);
-  var sepReg = /[/\\]/;
-  var trimSepReg = /^[/\\]|[/\\]$/g;
-  var baseArr = base.replace(trimSepReg, '').split(sepReg);
-  var subArr = sub.replace(trimSepReg, '').split(sepReg);
-  var matchPart = subArr[0];
-  for (var i = 0, len = baseArr.length; i < len; i++) {
-    if (matchPart === baseArr[i]) {
-      return baseArr.slice(0, i).concat(subArr).join(nodePath.sep);
-    }
+
+
+var defaultOptions = {
+  onComplete: function () {},
+  resolveUrlToFilePath: function(cssFile, href) {
+    return nodePath.resolve(cssFile.path, urlUtils.parse(href).pathname);
+  },
+  check: function(file, cssMeta, href) {
+    var prop = (cssMeta.property || '').toLowerCase();
+    return (prop == 'background' || prop == 'background-image') && isImage(href);
   }
-  return null;
-}
+};
 
 /**
- * [exports description]
- *
  * @param  {[type]} options 
  * {
  *   onComplete: function (file, newContent) {}//exec after handle all the url value
@@ -207,7 +184,8 @@ function smartRelativePath(base, sub) {
  * @return {[type]}         [description]
  */
 module.exports = function(options) {
-  options = options || {};
+  options = extend({}, defaultOptions, options);
+  DEBUG = options.debug
 
   return through.obj(function(file, enc, cb) {
     var modifiedContents = appendUrlVersion(file, options);
