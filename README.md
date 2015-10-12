@@ -21,12 +21,16 @@ gulp.src([
 		//default return path.resolve(cssFile.path, url.parse(href).pathname);
 	},
 	//@optional
+	//@return false if u dont want to handle this url resource
 	check: function (cssFile, cssMeta, href) {
 		/*
 		cssMeta: is a meata data described every css prop and its values,
 		refer to https://github.com/reworkcss/css
 		 */
-	}
+		//default return  (is 'backgroujd' or 'background-image') && is like image url
+	},
+	//@optinal default 'v'
+	paramKey: 'v'
 }))
 .pipe(gulp.dest('./dist'));
 ```

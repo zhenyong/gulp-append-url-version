@@ -79,7 +79,7 @@ function appendUrlVersion(file, options) {
         imgFilePath = options.resolveUrlToFilePath(file, href);
 
         if (imgFilePath && fs.existsSync(imgFilePath)) {
-          newImgUrl = makeVersionParamUrl(urlObj, imgFilePath);
+          newImgUrl = makeVersionParamUrl(urlObj, imgFilePath, options.paramKey);
 
           startInfo = meta.position.start;
           endInfo = meta.position.end;
@@ -111,20 +111,19 @@ function appendUrlVersion(file, options) {
  *
  * @return {String}        添加查询参数后生成的新 url
  */
-function makeVersionParamUrl(urlObj, filepath) {
+function makeVersionParamUrl(urlObj, filepath, key) {
   var tmp;
-  var name = '_v';
   var md5Hash = fileShortMd5(filepath);
   var search = urlObj.search || ''; //可能为 '?' 或者 '?a' 或者 '?a=1' 或者没有
   var newSearch;
-  var verReg = /_v=[\d\w]{10}/;
+  var verReg = new RegExp(key+'=[\\d\\w]+')
 
-  var strVerParam = (name + '=' + md5Hash);
+  var strVerParam = (key + '=' + md5Hash);
 
   //has appended before, then replace pair param
   if (verReg.test(search)) {
     newSearch = search.replace(verReg, strVerParam);
-
+    
   } else {
 
     if (search.length == 1) { //'url?'
@@ -162,8 +161,6 @@ function md5(text, subStart, subLen) {
   return typeof subStart !== undefined ? result.substr(subStart, subLen) : result;
 };
 
-
-
 var defaultOptions = {
   onComplete: function () {},
   resolveUrlToFilePath: function(cssFile, href) {
@@ -171,8 +168,10 @@ var defaultOptions = {
   },
   check: function(file, cssMeta, href) {
     var prop = (cssMeta.property || '').toLowerCase();
+    href = urlUtils.parse(href).pathname;
     return (prop == 'background' || prop == 'background-image') && isImage(href);
-  }
+  },
+  paramKey: 'v'
 };
 
 /**
